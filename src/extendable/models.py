@@ -12,7 +12,6 @@ else:
 from abc import ABCMeta
 
 from .context import extendable_registry
-from .utils import ClassAttribute
 
 _is_extendable_class_defined = False
 _registry_build_mode = False
@@ -32,10 +31,10 @@ class ExtendableClassDef:
         self, original_name: str, bases: List[Any], namespace: Dict[str, Any]
     ) -> None:
         self.namespace = namespace
-        self.name = namespace["__xreg_name__"].value
+        self.name = namespace["__xreg_name__"]
         self.original_name = original_name
         self.others_bases = bases
-        self.base_names = namespace["__xreg_base_names__"].value or []
+        self.base_names = namespace["__xreg_base_names__"] or []
         self.hierarchy = [self]
 
     def add_child(self, cls_def: "ExtendableClassDef") -> None:
@@ -46,7 +45,7 @@ class ExtendableClassDef:
 
     @property
     def is_mixed_bases(self) -> bool:
-        return {self.name} != self.base_names
+        return {self.name} != set(self.base_names)
 
     def __repr__(self) -> str:
         return (
@@ -68,6 +67,10 @@ def __register_class_def__(module: str, cls_def: ExtendableClassDef) -> None:
 
 
 class ExtendableMeta(ABCMeta):
+    __xreg_base_names__: List[str]
+    __xreg_name__: str
+    __xreg_all_base_names__: Set[str]
+
     @no_type_check
     def __new__(cls, clsname, bases, namespace, extends=None, **kwargs):
         """create a expected class and a fragment class that will be assembled at the
@@ -93,10 +96,8 @@ class ExtendableMeta(ABCMeta):
             ]
             namespace.update(
                 {
-                    "__xreg_name__": ClassAttribute("__xreg_name__", registry_name),
-                    "__xreg_base_names__": ClassAttribute(
-                        "__xreg_base_names__", registry_base_names
-                    ),
+                    "__xreg_name__": registry_name,
+                    "__xreg_base_names__": registry_base_names,
                 }
             )
             # for the original class, we wrap the class methods to forward
@@ -158,10 +159,6 @@ class ExtendableMeta(ABCMeta):
 
 
 class Extendable(metaclass=ExtendableMeta):
-    __xreg_base_names__: List[str]
-    __xreg_name__: str
-    __xreg_all_base_names__: Set[str]
-
     @no_type_check
     def __new__(cls, *args, **kwargs) -> "Extendable":
         if getattr(cls, "_is_aggregated_class", False):

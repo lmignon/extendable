@@ -1,26 +1,5 @@
 from collections import OrderedDict
-from typing import Any, Generic, Iterator, MutableSet, Optional, Tuple, Type, TypeVar
-
-
-class ClassAttribute:
-    """Hide class attribute from its instances."""
-
-    __slots__ = (
-        "name",
-        "value",
-    )
-
-    def __init__(self, name: str, value: Any) -> None:
-        self.name = name
-        self.value = value
-
-    def __get__(self, instance: Any, owner: Type[Any]) -> Any:
-        if instance is None:
-            return self.value
-        raise AttributeError(
-            f"{self.name!r} attribute of {owner.__name__!r} is class-only"
-        )
-
+from typing import Generic, Iterator, MutableSet, Optional, Tuple, TypeVar
 
 T = TypeVar("T")
 

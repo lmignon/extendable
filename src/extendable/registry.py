@@ -3,7 +3,7 @@ from contextlib import contextmanager
 from typing import Any, Dict, Iterator, List, Optional, Set, Type, cast
 
 from . import models
-from .utils import ClassAttribute, LastOrderedSet
+from .utils import LastOrderedSet
 
 
 class ExtendableClassesRegistry:
@@ -115,17 +115,13 @@ class ExtendableClassesRegistry:
             namespace.update(
                 {
                     "__qualname__": uniq_class_name,
-                    "_is_aggregated_class": ClassAttribute(
-                        "_is_aggregated_class", True
-                    ),
+                    "_is_aggregated_class": True,
                 }
             )
             extendableClass = type(simple_name, tuple(bases), namespace)
             base = cast(Type[models.Extendable], extendableClass)
             self[name] = base
-        base.__xreg_all_base_names__ = ClassAttribute(
-            "__xreg_all_base_names__", set(class_def.base_names)
-        )
+        base.__xreg_all_base_names__ = set(class_def.base_names)
         return base
 
     @contextmanager
