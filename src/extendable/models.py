@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 
 class ExtendableClassDef:
     name: str
-    base_names: Set[str]
+    base_names: List[str]
     namespace: Dict[str, Any]
     original_name: str
     others_bases: List[Any]
@@ -37,12 +37,14 @@ class ExtendableClassDef:
         self.name = namespace["__xreg_name__"].value
         self.original_name = original_name
         self.others_bases = bases
-        self.base_names = set(namespace["__xreg_base_names__"].value or [])
+        self.base_names = namespace["__xreg_base_names__"].value or []
         self.hierarchy = [self]
 
     def add_child(self, cls_def: "ExtendableClassDef") -> None:
         self.hierarchy.append(cls_def)
-        self.base_names.update(cls_def.base_names)
+        for name in cls_def.base_names:
+            if name not in self.base_names:
+                self.base_names.append(name)
 
     @property
     def is_mixed_bases(self) -> bool:
@@ -60,7 +62,7 @@ _extendable_class_defs_by_module: OrderedDict[
 ] = collections.OrderedDict()
 
 
-def __register__(module: str, cls_def: ExtendableClassDef) -> None:
+def __register_class_def__(module: str, cls_def: ExtendableClassDef) -> None:
     global _extendable_class_defs_by_module
     if module not in _extendable_class_defs_by_module:
         _extendable_class_defs_by_module[module] = []
@@ -114,7 +116,7 @@ class ExtendableMeta(ABCMeta):
                 b for b in bases if not (issubclass(b, Extendable))
             ]
             namespace.update({"_original_cls": new_cls})
-            __register__(
+            __register_class_def__(
                 namespace["__module__"],
                 ExtendableClassDef(
                     original_name=clsname, bases=tuple(other_bases), namespace=namespace
@@ -152,14 +154,15 @@ class ExtendableMeta(ABCMeta):
 
     def __subclasscheck__(cls, subclass: Any) -> bool:  # noqa: B902
         """Implement issubclass(sub, cls)."""
-        if hasattr(subclass, "_original_cls"):
-            return cls.__subclasscheck__(subclass._original_cls)
+        if hasattr(subclass, "__xreg_all_base_names__"):
+            return cls.__xreg_name__ in subclass.__xreg_all_base_names__
         return isinstance(subclass, type) and super().__subclasscheck__(subclass)
 
 
 class Extendable(metaclass=ExtendableMeta):
     __xreg_base_names__: List[str]
     __xreg_name__: str
+    __xreg_all_base_names__: Set[str]
 
     @no_type_check
     def __new__(cls, *args, **kwargs) -> "Extendable":

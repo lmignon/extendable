@@ -125,6 +125,9 @@ class ExtendableClassesRegistry:
             extendableClass = type(simple_name, tuple(bases), namespace)
             base = cast(Type[models.Extendable], extendableClass)
             self[name] = base
+        base.__xreg_all_base_names__ = ClassAttribute(
+            "__xreg_all_base_names__", set(class_def.base_names)
+        )
         return base
 
     @contextmanager
