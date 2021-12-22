@@ -1,5 +1,3 @@
-# Copyright 2021 ACSONE SA/NV
-# License LGPL-3.0 or later (http://www.gnu.org/licenses/lgpl.html)
 import sqlite3
 from contextlib import contextmanager
 from typing import Any, Dict, Iterator, List, Optional, Set, Type, cast
