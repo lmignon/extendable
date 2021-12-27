@@ -1,18 +1,6 @@
 from typing import Union
 
-import pytest
-
-from extendable import ExtendableMeta, context, registry
-
-
-@pytest.fixture
-def test_registry() -> registry.ExtendableClassesRegistry:
-    reg = registry.ExtendableClassesRegistry()
-    try:
-        token = context.extendable_registry.set(reg)
-        yield reg
-    finally:
-        context.extendable_registry.reset(token)
+from extendable import ExtendableMeta
 
 
 def test_simple_extends(test_registry):
