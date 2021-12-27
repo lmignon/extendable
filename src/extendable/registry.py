@@ -1,8 +1,8 @@
 import sqlite3
 from contextlib import contextmanager
-from typing import Any, Dict, Iterator, List, Optional, Set, Type, cast
+from typing import Any, Dict, Iterator, List, Optional, Set, cast
 
-from . import models
+from . import main
 from .utils import LastOrderedSet
 
 
@@ -17,21 +17,21 @@ class ExtendableClassesRegistry:
     """
 
     def __init__(self) -> None:
-        self._extendable_classes: Dict[str, Type[models.Extendable]] = {}
+        self._extendable_classes: Dict[str, main.ExtendableMeta] = {}
         self._loaded_modules: Set[str] = set()
         self.ready: bool = False
-        self._extendable_class_defs: Dict[str, models.ExtendableClassDef] = {}
+        self._extendable_class_defs: Dict[str, main.ExtendableClassDef] = {}
 
-    def __getitem__(self, key: str) -> Type[models.Extendable]:
+    def __getitem__(self, key: str) -> main.ExtendableMeta:
         return self._extendable_classes[key]
 
-    def __setitem__(self, key: str, value: Type[models.Extendable]) -> None:
+    def __setitem__(self, key: str, value: main.ExtendableMeta) -> None:
         self._extendable_classes[key] = value
 
     def __contains__(self, key: str) -> bool:
         return key in self._extendable_classes
 
-    def get(self, key: str, default: Any = ...) -> Type[models.Extendable]:
+    def get(self, key: str, default: Any = ...) -> main.ExtendableMeta:
         return self._extendable_classes.get(key, default)
 
     def __iter__(self) -> Iterator[str]:
@@ -40,11 +40,11 @@ class ExtendableClassesRegistry:
     def load_extendable_classes(self, module: str) -> None:
         if module in self._loaded_modules:
             return
-        for cls_def in models._extendable_class_defs_by_module.get(module, []):
+        for cls_def in main._extendable_class_defs_by_module.get(module, []):
             self.load_extendable_class_def(cls_def)
         self._loaded_modules.add(module)
 
-    def load_extendable_class_def(self, cls_def: models.ExtendableClassDef) -> None:
+    def load_extendable_class_def(self, cls_def: main.ExtendableClassDef) -> None:
         parents = cls_def.base_names
         if cls_def.name in self and not parents:
             raise TypeError(
@@ -88,15 +88,15 @@ class ExtendableClassesRegistry:
             to_build = remaining  # type: ignore
 
     def build_extendable_class(
-        self, class_def: models.ExtendableClassDef
-    ) -> Type[models.Extendable]:
+        self, class_def: main.ExtendableClassDef
+    ) -> main.ExtendableMeta:
         """Build the class hierarchy from the first one to the last one into the
         hierachy definition."""
         name = class_def.name
         for idx, cls_def in enumerate(class_def.hierarchy):
             # retrieve extendable_parent
             # determine all the classes the component should inherit from
-            bases = LastOrderedSet[Type[models.Extendable]]()
+            bases = LastOrderedSet[main.ExtendableMeta]()
             for base_name in cls_def.base_names:
                 if base_name not in self:
                     if idx != 0 or base_name != cls_def.name:
@@ -119,18 +119,18 @@ class ExtendableClassesRegistry:
                 }
             )
             extendableClass = type(simple_name, tuple(bases), namespace)
-            base = cast(Type[models.Extendable], extendableClass)
+            base = cast(main.ExtendableMeta, extendableClass)
             self[name] = base
         base.__xreg_all_base_names__ = set(class_def.base_names)
         return base
 
     @contextmanager
     def build_mode(self) -> Iterator[None]:
-        models._registry_build_mode = True
+        main._registry_build_mode = True
         try:
             yield
         finally:
-            models._registry_build_mode = False
+            main._registry_build_mode = False
 
     def init_registry(self, module_matchings: Optional[List[str]] = None) -> None:
         """Build the extendable classes by aggregating the classes declared in the given
@@ -177,7 +177,7 @@ class ModuleIndex:
         )
         records = (
             (m, idx)
-            for idx, m in enumerate(models._extendable_class_defs_by_module.keys())
+            for idx, m in enumerate(main._extendable_class_defs_by_module.keys())
         )
         self._conn.executemany("INSERT INTO modules VALUES (?, ?)", records)
 

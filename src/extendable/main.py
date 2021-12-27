@@ -2,7 +2,17 @@ import collections
 import functools
 import inspect
 import sys
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Type, no_type_check
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    List,
+    Optional,
+    Set,
+    Type,
+    cast,
+    no_type_check,
+)
 
 if sys.version_info >= (3, 7):
     from typing import OrderedDict
@@ -13,7 +23,6 @@ from abc import ABCMeta
 
 from .context import extendable_registry
 
-_is_extendable_class_defined = False
 _registry_build_mode = False
 if TYPE_CHECKING:
     from .registry import ExtendableClassesRegistry
@@ -72,27 +81,25 @@ class ExtendableMeta(ABCMeta):
     __xreg_all_base_names__: Set[str]
 
     @no_type_check
-    def __new__(cls, clsname, bases, namespace, extends=None, **kwargs):
-        """create a expected class and a fragment class that will be assembled at the
-        end of registry load process to build the final class."""
+    def __new__(metacls, clsname, bases, namespace, extends=None, **kwargs):
+        """create the expected class anc collect the class definition that will be used
+        at the end of registry load process to build the final class."""
         new_namespace = namespace
-        if _is_extendable_class_defined and "_is_aggregated_class" not in namespace:
+        if "_is_aggregated_class" not in namespace:
             registry_name = ".".join(
                 (namespace["__module__"], namespace["__qualname__"])
             )
             if extends:
                 # if we extend another Extendable, the registry name must
                 # be the one from the extended Extendable
-                if not issubclass(extends, Extendable):
+                if not metacls._is_extendable(extends):
                     raise TypeError(
                         f"Extendable class {registry_name} extends an non "
                         f"extendable class {extends.__name__} "
                     )
                 registry_name = getattr(extends, "__xreg_name__", None)
             registry_base_names = [
-                b.__xreg_name__
-                for b in bases
-                if issubclass(b, Extendable) and b != Extendable
+                b.__xreg_name__ for b in bases if metacls._is_extendable(b)
             ]
             namespace.update(
                 {
@@ -102,18 +109,16 @@ class ExtendableMeta(ABCMeta):
             )
             # for the original class, we wrap the class methods to forward
             # the call to the aggregated one at runtime
-            new_namespace = cls._wrap_class_methods(namespace)
+            new_namespace = metacls._wrap_class_methods(namespace)
         # We build the Origial class
         new_cls = super().__new__(
-            cls, name=clsname, bases=bases, namespace=new_namespace, **kwargs
+            metacls, name=clsname, bases=bases, namespace=new_namespace, **kwargs
         )
-        if _is_extendable_class_defined and not _registry_build_mode:
+        if not _registry_build_mode:
             # we are into the loading process of original Extendable
             # For each defined Extendable class, we keep a copy of the class
             # definition. This copy will be used to create the aggregated class
-            other_bases = [Extendable] + [
-                b for b in bases if not (issubclass(b, Extendable))
-            ]
+            other_bases = [b for b in bases if not metacls._is_extendable(b)]
             namespace.update({"_original_cls": new_cls})
             __register_class_def__(
                 namespace["__module__"],
@@ -124,7 +129,9 @@ class ExtendableMeta(ABCMeta):
         return new_cls
 
     @classmethod
-    def _wrap_class_methods(cls, namespace: Dict[str, Any]) -> Dict[str, Any]:
+    def _wrap_class_methods(metacls, namespace: Dict[str, Any]) -> Dict[str, Any]:
+        """Wrap classmethods defined into the namespace to delegate the call to the
+        final class."""
         new_namespace = {}
         for key, value in namespace.items():
             if isinstance(value, classmethod):
@@ -151,28 +158,37 @@ class ExtendableMeta(ABCMeta):
                 new_namespace[key] = value
         return new_namespace
 
+    @classmethod
+    def _is_extendable(metacls, cls: Type[Any]) -> bool:
+        return cast(bool, type(cls) == ExtendableMeta)
+
+    @no_type_check
+    def __call__(cls, *args, **kwargs) -> "ExtendableMeta":
+        """Create the aggregated class in place of the original class definition.
+
+        This method called at instance creation. The resulted instance
+        will be an instance of the aggregated class not an instance of
+        the original class definition since this definition could have
+        been extended.
+        """
+        if getattr(cls, "_is_aggregated_class", False):
+            return super().__call__(*args, **kwargs)
+        return cls._get_assembled_cls()(*args, **kwargs)
+
+    ###############################################################
+    # concrete methods provided to the final class by the metaclass
+    ###############################################################
+
     def __subclasscheck__(cls, subclass: Any) -> bool:  # noqa: B902
         """Implement issubclass(sub, cls)."""
         if hasattr(subclass, "__xreg_all_base_names__"):
             return cls.__xreg_name__ in subclass.__xreg_all_base_names__
         return isinstance(subclass, type) and super().__subclasscheck__(subclass)
 
-
-class Extendable(metaclass=ExtendableMeta):
-    @no_type_check
-    def __new__(cls, *args, **kwargs) -> "Extendable":
-        if getattr(cls, "_is_aggregated_class", False):
-            return super().__new__(cls)
-        return cls._get_assembled_cls()(*args, **kwargs)
-
-    @classmethod
     def _get_assembled_cls(
         cls, registry: Optional["ExtendableClassesRegistry"] = None
-    ) -> Type["Extendable"]:
-        if getattr(cls, "_is_aggregated_class", False):
-            return cls
+    ) -> "ExtendableMeta":
+        """An helper method to get the final class (the aggregated one) for the current
+        class."""
         registry = registry if registry else extendable_registry.get()
         return registry[cls.__xreg_name__]
-
-
-_is_extendable_class_defined = True

@@ -2,7 +2,7 @@ from typing import Union
 
 import pytest
 
-from extendable import context, models, registry
+from extendable import ExtendableMeta, context, registry
 
 
 @pytest.fixture
@@ -16,7 +16,7 @@ def test_registry() -> registry.ExtendableClassesRegistry:
 
 
 def test_simple_extends(test_registry):
-    class A(models.Extendable):
+    class A(metaclass=ExtendableMeta):
         prop_a: int = 1
 
         def sum(self) -> int:
@@ -49,11 +49,11 @@ def test_simple_extends(test_registry):
 
 
 def test_composite_extends(test_registry):
-    class Coordinate(models.Extendable):
+    class Coordinate(metaclass=ExtendableMeta):
         lat = 0.1
         lng = 10.1
 
-    class Name(models.Extendable):
+    class Name(metaclass=ExtendableMeta):
         name: str = "name"
 
     class Location(Coordinate, Name):
@@ -77,11 +77,11 @@ def test_composite_extends(test_registry):
 
 
 def test_composite_extends_mro(test_registry):
-    class A(models.Extendable):
+    class A(metaclass=ExtendableMeta):
         def test(self):
             return "A"
 
-    class B(models.Extendable):
+    class B(metaclass=ExtendableMeta):
         def test(self):
             return "B"
 
@@ -101,15 +101,15 @@ def test_composite_extends_mro(test_registry):
 
 
 def test_extended_composite_mro(test_registry):
-    class A(models.Extendable):
+    class A(metaclass=ExtendableMeta):
         def test(self):
             return "A"
 
-    class B(models.Extendable):
+    class B(metaclass=ExtendableMeta):
         def test(self):
             return "B"
 
-    class C(models.Extendable):
+    class C(metaclass=ExtendableMeta):
         def test(self):
             return "C"
 
