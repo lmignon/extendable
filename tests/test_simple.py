@@ -34,6 +34,7 @@ def test_simple_extends(test_registry):
     assert result.prop_a == 1
     assert result.sum() == 3
     assert A.cls_sum() == 5
+    assert isinstance(result.__class__, ExtendableMeta)
 
 
 def test_composite_extends(test_registry):

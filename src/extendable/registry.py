@@ -1,4 +1,5 @@
 import sqlite3
+import types
 from contextlib import contextmanager
 from typing import Any, Dict, Iterator, List, Optional, Set, cast
 
@@ -118,7 +119,12 @@ class ExtendableClassesRegistry:
                     "_is_aggregated_class": True,
                 }
             )
-            extendableClass = type(simple_name, tuple(bases), namespace)
+            extendableClass = types.new_class(
+                simple_name,
+                tuple(bases),
+                kwds={"metaclass": main.ExtendableMeta},
+                exec_body=lambda ns, namespace=namespace: ns.update(namespace),
+            )
             base = cast(main.ExtendableMeta, extendableClass)
             self[name] = base
         base.__xreg_all_base_names__ = set(class_def.base_names)
