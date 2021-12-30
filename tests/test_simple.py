@@ -112,3 +112,13 @@ def test_extended_composite_mro(test_registry):
 
     obj = ABExt()
     assert obj.test() == "C"
+
+
+def test_meta_subclass():
+    class MyMeta(ExtendableMeta):
+        pass
+
+    class MyExt(metaclass=MyMeta):
+        pass
+
+    assert MyMeta._is_extendable(MyExt)

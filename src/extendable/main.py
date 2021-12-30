@@ -2,17 +2,7 @@ import collections
 import functools
 import inspect
 import sys
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Dict,
-    List,
-    Optional,
-    Set,
-    Type,
-    cast,
-    no_type_check,
-)
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Type, no_type_check
 
 if sys.version_info >= (3, 7):
     from typing import OrderedDict
@@ -201,7 +191,7 @@ class ExtendableMeta(ABCMeta):
 
     @classmethod
     def _is_extendable(metacls, cls: Type[Any]) -> bool:
-        return cast(bool, type(cls) == ExtendableMeta)
+        return issubclass(type(cls), ExtendableMeta)
 
     @no_type_check
     def __call__(cls, *args, **kwargs) -> "ExtendableMeta":
