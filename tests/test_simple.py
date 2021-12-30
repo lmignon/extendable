@@ -1,5 +1,10 @@
 from typing import Union
 
+try:
+    from typing import Literal
+except ImportError:
+    from typing_extensions import Literal
+
 from extendable import ExtendableMeta
 
 
@@ -35,6 +40,29 @@ def test_simple_extends(test_registry):
     assert result.sum() == 3
     assert A.cls_sum() == 5
     assert isinstance(result.__class__, ExtendableMeta)
+
+
+def test_extends_new_model(test_registry):
+    class A(metaclass=ExtendableMeta):
+        value: int = 2
+
+        def method(self):
+            return self.value
+
+    class B(A):  # no extends, I want two different models here
+        value2: int = 3
+
+        def method(self):
+            return super().method() + self.value2
+
+    # we extend A after the definition of B
+    class AExt(A, extends=A):
+        def method(self):
+            return super().method() + 1
+
+    test_registry.init_registry()
+    # The result should take into account AExt
+    assert B().method() == 6
 
 
 def test_composite_extends(test_registry):
@@ -112,6 +140,18 @@ def test_extended_composite_mro(test_registry):
 
     obj = ABExt()
     assert obj.test() == "C"
+
+
+def test_issubclass(test_registry):
+    """In this test we check that issublass is lenient when used with GenericAlias."""
+
+    class A(metaclass=ExtendableMeta):
+        pass
+
+    test_registry.init_registry()
+
+    assert not issubclass(Literal["test"], A)
+    assert not issubclass(Literal, A)
 
 
 def test_meta_subclass():

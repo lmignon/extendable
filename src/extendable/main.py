@@ -77,6 +77,7 @@ class ExtendableMeta(ABCMeta):
     __xreg_name__: str
     __xreg_all_base_names__: Set[str]
     _is_aggregated_class: bool
+    _original_cls: "ExtendableMeta"
 
     @no_type_check
     def __new__(metacls, name, bases, namespace, extends=None, **kwargs):
