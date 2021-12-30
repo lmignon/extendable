@@ -117,13 +117,16 @@ class ExtendableClassesRegistry:
                 {
                     "__qualname__": uniq_class_name,
                     "_is_aggregated_class": True,
+                    "_original_cls": cls_def.original_cls,
                 }
             )
             extendableClass = types.new_class(
                 simple_name,
                 tuple(bases),
-                kwds={"metaclass": main.ExtendableMeta},
-                exec_body=lambda ns, namespace=namespace: ns.update(namespace),
+                kwds={"metaclass": cls_def.metaclass},
+                exec_body=(
+                    lambda ns, namespace=namespace: ns.update(namespace)  # type: ignore
+                ),
             )
             base = cast(main.ExtendableMeta, extendableClass)
             self[name] = base

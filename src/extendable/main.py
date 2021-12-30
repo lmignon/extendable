@@ -35,9 +35,15 @@ class ExtendableClassDef:
     original_name: str
     others_bases: List[Any]
     hierarchy: List["ExtendableClassDef"]
+    metaclass: "ExtendableMeta"
+    original_cls: Type["ExtendableMeta"]
 
     def __init__(
-        self, original_name: str, bases: List[Any], namespace: Dict[str, Any]
+        self,
+        original_name: str,
+        bases: List[Any],
+        namespace: Dict[str, Any],
+        metaclass: "ExtendableMeta",
     ) -> None:
         self.namespace = namespace
         self.name = namespace["__xreg_name__"]
@@ -45,6 +51,7 @@ class ExtendableClassDef:
         self.others_bases = bases
         self.base_names = namespace["__xreg_base_names__"] or []
         self.hierarchy = [self]
+        self.metaclass = metaclass
 
     def add_child(self, cls_def: "ExtendableClassDef") -> None:
         self.hierarchy.append(cls_def)
@@ -79,54 +86,88 @@ class ExtendableMeta(ABCMeta):
     __xreg_base_names__: List[str]
     __xreg_name__: str
     __xreg_all_base_names__: Set[str]
+    _is_aggregated_class: bool
 
     @no_type_check
-    def __new__(metacls, clsname, bases, namespace, extends=None, **kwargs):
+    def __new__(metacls, name, bases, namespace, extends=None, **kwargs):
         """create the expected class anc collect the class definition that will be used
         at the end of registry load process to build the final class."""
-        new_namespace = namespace
-        if "_is_aggregated_class" not in namespace:
-            registry_name = ".".join(
-                (namespace["__module__"], namespace["__qualname__"])
+        class_def = None
+        if not _registry_build_mode:
+            namespace = metacls._prepare_namespace(
+                name=name, bases=bases, namespace=namespace, extends=extends, **kwargs
             )
-            if extends:
-                # if we extend another Extendable, the registry name must
-                # be the one from the extended Extendable
-                if not metacls._is_extendable(extends):
-                    raise TypeError(
-                        f"Extendable class {registry_name} extends an non "
-                        f"extendable class {extends.__name__} "
-                    )
-                registry_name = getattr(extends, "__xreg_name__", None)
-            registry_base_names = [
-                b.__xreg_name__ for b in bases if metacls._is_extendable(b)
-            ]
-            namespace.update(
-                {
-                    "__xreg_name__": registry_name,
-                    "__xreg_base_names__": registry_base_names,
-                }
+            class_def = metacls._collect_class_def(
+                name=name, bases=bases, namespace=namespace, extends=extends, **kwargs
             )
             # for the original class, we wrap the class methods to forward
             # the call to the aggregated one at runtime
-            new_namespace = metacls._wrap_class_methods(namespace)
+            namespace = metacls._wrap_class_methods(namespace)
         # We build the Origial class
-        new_cls = super().__new__(
-            metacls, name=clsname, bases=bases, namespace=new_namespace, **kwargs
+        new_cls = metacls._build_original_class(
+            name=name, bases=bases, namespace=namespace, **kwargs
         )
-        if not _registry_build_mode:
-            # we are into the loading process of original Extendable
-            # For each defined Extendable class, we keep a copy of the class
-            # definition. This copy will be used to create the aggregated class
-            other_bases = [b for b in bases if not metacls._is_extendable(b)]
-            namespace.update({"_original_cls": new_cls})
-            __register_class_def__(
-                namespace["__module__"],
-                ExtendableClassDef(
-                    original_name=clsname, bases=tuple(other_bases), namespace=namespace
-                ),
-            )
+        if not _registry_build_mode and class_def:
+            class_def.original_cls = new_cls
         return new_cls
+
+    @no_type_check
+    @classmethod
+    def _prepare_namespace(metacls, name, bases, namespace, extends=None, **kwargs):
+        registry_name = ".".join((namespace["__module__"], namespace["__qualname__"]))
+        if extends:
+            # if we extend another Extendable, the registry name must
+            # be the one from the extended Extendable
+            if not metacls._is_extendable(extends):
+                raise TypeError(
+                    f"Extendable class {registry_name} extends an non "
+                    f"extendable class {extends.__name__} "
+                )
+            registry_name = getattr(extends, "__xreg_name__", None)
+        registry_base_names = [
+            b.__xreg_name__ for b in bases if metacls._is_extendable(b)
+        ]
+        namespace.update(
+            {
+                "__xreg_name__": registry_name,
+                "__xreg_base_names__": registry_base_names,
+                "_is_aggregated_class": False,
+            }
+        )
+        return namespace
+
+    @no_type_check
+    @classmethod
+    def _collect_class_def(metacls, name, bases, namespace, extends=None, **kwargs):
+        # we are into the loading process of original Extendable
+        # For each defined Extendable class, we keep a copy of the class
+        # definition. This copy will be used to create the aggregated class
+        other_bases = [b for b in bases if not metacls._is_extendable(b)]
+        cls_def = ExtendableClassDef(
+            original_name=name,
+            bases=tuple(other_bases),
+            namespace=namespace,
+            metaclass=metacls,
+        )
+        __register_class_def__(
+            namespace["__module__"],
+            cls_def,
+        )
+        return cls_def
+
+    @no_type_check
+    @classmethod
+    def _build_original_class(metacls, name, bases, namespace, **kwargs):
+        """Build the original class.
+
+        By default we call super.__new__. This method could be overriden
+        if you need to create a new type mixin ExtendableMeta with
+        another type. In such a case, the new type should only override
+        this method to call the __new__ method on the other type.
+        """
+        return super().__new__(
+            metacls, name=name, bases=bases, namespace=namespace, **kwargs
+        )
 
     @classmethod
     def _wrap_class_methods(metacls, namespace: Dict[str, Any]) -> Dict[str, Any]:
@@ -171,7 +212,7 @@ class ExtendableMeta(ABCMeta):
         the original class definition since this definition could have
         been extended.
         """
-        if getattr(cls, "_is_aggregated_class", False):
+        if cls._is_aggregated_class:
             return super().__call__(*args, **kwargs)
         return cls._get_assembled_cls()(*args, **kwargs)
 
