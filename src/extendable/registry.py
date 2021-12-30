@@ -7,6 +7,11 @@ from . import main
 from .utils import LastOrderedSet
 
 
+class ExtendableRegistryListener:
+    def on_registry_initialized(self, registry: "ExtendableClassesRegistry") -> None:
+        ...
+
+
 class ExtendableClassesRegistry:
     """Store all the extendableClasses and allow to retrieve them by name.
 
@@ -16,6 +21,8 @@ class ExtendableClassesRegistry:
     The :attr:`ready` attribute must be set to ``True`` when all the extendable classes
     are loaded.
     """
+
+    listeners: List[ExtendableRegistryListener] = []
 
     def __init__(self) -> None:
         self._extendable_classes: Dict[str, main.ExtendableMeta] = {}
@@ -156,6 +163,8 @@ class ExtendableClassesRegistry:
                 for module in idx.get_modules(match):
                     self.load_extendable_classes(module)
             self.build_extendable_classes()
+            for listener in self.listeners:
+                listener.on_registry_initialized(self)
         self.ready = True
 
 

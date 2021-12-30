@@ -1,4 +1,5 @@
 """Test registry loading."""
+from extendable.registry import ExtendableClassesRegistry, ExtendableRegistryListener
 
 
 def test_init_order_1(test_registry, sys_modules_cleanup):
@@ -66,3 +67,25 @@ def test_init_registry_specific_modules_order_3(test_registry, sys_modules_clean
         ["tests.mod_base.*", "tests.mod_ext2.*", "tests.mod_ext1.*"]
     )
     assert Base().test() == "mod1.mod2.base"
+
+
+def test_init_registry_listener(test_registry, mocker):
+    """Check that our listener is called a the end of registry initialisation."""
+    from tests.mod_base.base import Base  # NOQA isort:skip
+    import tests.mod_ext1  # NOQA isort:skip
+    import tests.mod_ext2  # NOQA isort:skip
+
+    test_registry.init_registry()
+
+    class MyLister(ExtendableRegistryListener):
+        pass
+
+    listener = MyLister()
+    try:
+        listeners = ExtendableClassesRegistry.listeners.copy()
+        ExtendableClassesRegistry.listeners.append(listener)
+        mocker.patch.object(MyLister, "on_registry_initialized")
+        test_registry.init_registry()
+        listener.on_registry_initialized.assert_called_with(test_registry)
+    finally:
+        ExtendableClassesRegistry.listeners = listeners

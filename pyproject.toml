@@ -23,6 +23,7 @@ requires-python = ">=3.6"
 [project.optional-dependencies]
 test = [
     "pytest",
+    "pytest-mock",
     "coverage[toml]",
 ]
 mypy = [
