@@ -100,7 +100,7 @@ class ExtendableMeta(ABCMeta):
         )
         if not _registry_build_mode and class_def:
             class_def.original_cls = new_cls
-            if True:
+            if False:
                 registry = extendable_registry.get()
                 with registry.build_mode():
                     extendable_registry.get().build_extendable_class(class_def)

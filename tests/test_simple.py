@@ -30,7 +30,7 @@ def test_simple_extends(test_registry):
         def cls_sum(cls) -> int:
             return super().cls_sum() + 3
 
-    # test_registry.init_registry()
+    test_registry.init_registry()
 
     result: Union[A, B] = A()
     assert isinstance(result, A)
