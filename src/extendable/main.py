@@ -81,7 +81,7 @@ class ExtendableMeta(ABCMeta):
 
     @no_type_check
     def __new__(metacls, name, bases, namespace, extends=None, **kwargs):
-        """create the expected class anc collect the class definition that will be used
+        """create the expected class and collect the class definition that will be used
         at the end of registry load process to build the final class."""
         class_def = None
         if not _registry_build_mode:
@@ -156,9 +156,7 @@ class ExtendableMeta(ABCMeta):
         another type. In such a case, the new type should only override
         this method to call the __new__ method on the other type.
         """
-        return super().__new__(
-            metacls, name=name, bases=bases, namespace=namespace, **kwargs
-        )
+        return super().__new__(metacls, name, bases, namespace, **kwargs)
 
     @classmethod
     def _wrap_class_methods(metacls, namespace: Dict[str, Any]) -> Dict[str, Any]:
