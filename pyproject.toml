@@ -30,7 +30,8 @@ mypy = [
     "mypy",
 ]
 release = [
-    "towncrier"
+    "towncrier",
+    "bumpversion",
 ]
 
 [project.urls]
