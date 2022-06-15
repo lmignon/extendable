@@ -42,6 +42,53 @@ def test_simple_extends(test_registry):
     assert isinstance(result.__class__, ExtendableMeta)
 
 
+def test_simple_extends_same_class(test_registry):
+    class A(metaclass=ExtendableMeta):
+        prop_a: int = 1
+
+        def sum(self) -> int:
+            return self.prop_a
+
+        @classmethod
+        def cls_sum(cls) -> int:
+            return 2
+
+    class B(A, extends=A):
+        prop_b: int = 2
+
+        def sum(self) -> int:
+            s = super()
+            return s.sum() + self.prop_b
+
+        @classmethod
+        def cls_sum(cls) -> int:
+            return super().cls_sum() + 3
+
+    class C(A, extends=A):
+        prop_c: int = 3
+
+        def sum(self) -> int:
+            s = super()
+            return s.sum() + self.prop_c
+
+        @classmethod
+        def cls_sum(cls) -> int:
+            return super().cls_sum() + 4
+
+    test_registry.init_registry()
+
+    result: Union[A, B, C] = A()
+    assert isinstance(result, A)
+    assert isinstance(result, B)
+    assert isinstance(result, C)
+    assert result.prop_c == 3
+    assert result.prop_b == 2
+    assert result.prop_a == 1
+    assert result.sum() == 6
+    assert A.cls_sum() == 9
+    assert isinstance(result.__class__, ExtendableMeta)
+
+
 def test_extends_new_model(test_registry):
     class A(metaclass=ExtendableMeta):
         value: int = 2
