@@ -2,10 +2,14 @@
 [![codecov](https://codecov.io/gh/lmignon/extendable/branch/master/graph/badge.svg?token=LXD34T420H)](https://codecov.io/gh/lmignon/extendable)
 # Extendable
 
+## About
+
 Extendable is a module that aims to provide a way to define extensible python
 classes. This module was born out of the need to find a way to allow the
 definition of modules whose behaviour can be extended by other modules by
 extending the initial definition of classes at runtime.
+
+## Quick start
 
 Let's define a first python class.
 
@@ -70,5 +74,29 @@ print (p)
 ```
 
 > :warning: This way of extending a predefined behaviour must be used carefully and in
-accordance with the [Liskov substitution principle](https://en.wikipedia.org/wiki/Liskov_substitution_principle)
-It doesn't replace others design patterns that can be used to make your code pluggable.
+> accordance with the [Liskov substitution principle](https://en.wikipedia.org/wiki/Liskov_substitution_principle)
+> It doesn't replace others design patterns that can be used to make your code pluggable.
+
+## Development
+
+To run tests, use `tox`. You will get a test coverage report in `htmlcov/index.html`.
+An easy way to install tox is `pipx install tox`.
+
+This project uses pre-commit to enforce linting (among which black for code formating,
+isort for sorting imports, and mypy for type checking).
+
+To make sure linters run locally on each of your commits, install pre-commit
+(`pipx install pre-commit` is recommended), and run `pre-commit install` in your
+local clone of the extendable repository.
+
+To release:
+
+ * run ``bumpversion patch|minor|major` --list`
+ * Check the `new_version` value returned by the previous command
+ * run `towncrier build`.
+ * Inspect and commit the updated HISTORY.rst.
+ * `git tag {new_version} ; git push --tags`.
+
+## Contributing
+
+All kind of contributions are welcome.
