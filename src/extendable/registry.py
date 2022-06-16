@@ -157,6 +157,7 @@ class ExtendableClassesRegistry:
 
         The module list accept wildcard expression as last character
         """
+        self._extendable_classes.clear()
         module_matchings = module_matchings if module_matchings else ["*"]
         with self.build_mode(), ModuleIndex() as idx:
             for match in module_matchings:

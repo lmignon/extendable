@@ -94,12 +94,16 @@ class ExtendableMeta(ABCMeta):
             # for the original class, we wrap the class methods to forward
             # the call to the aggregated one at runtime
             namespace = metacls._wrap_class_methods(namespace)
-        # We build the Origial class
+        # We build the original class
         new_cls = metacls._build_original_class(
             name=name, bases=bases, namespace=namespace, **kwargs
         )
         if not _registry_build_mode and class_def:
             class_def.original_cls = new_cls
+            if False:
+                registry = extendable_registry.get()
+                with registry.build_mode():
+                    extendable_registry.get().build_extendable_class(class_def)
         return new_cls
 
     @no_type_check
@@ -134,6 +138,8 @@ class ExtendableMeta(ABCMeta):
         # For each defined Extendable class, we keep a copy of the class
         # definition. This copy will be used to create the aggregated class
         other_bases = [b for b in bases if not metacls._is_extendable(b)]
+        # namespace = dict(namespace)
+        # namespace.pop("__classcell__", None)
         cls_def = ExtendableClassDef(
             original_name=name,
             bases=tuple(other_bases),
