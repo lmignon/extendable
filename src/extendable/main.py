@@ -105,7 +105,9 @@ class ExtendableMeta(ABCMeta):
     @no_type_check
     @classmethod
     def _prepare_namespace(metacls, name, bases, namespace, extends=None, **kwargs):
-        registry_name = ".".join((namespace["__module__"], namespace["__qualname__"]))
+        registry_name = ".".join(
+            (namespace["__module__"], namespace.get("__qualname__", name))
+        )
         if extends:
             # if we extend another Extendable, the registry name must
             # be the one from the extended Extendable
