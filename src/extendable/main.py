@@ -59,6 +59,21 @@ class ExtendableClassDef:
             f"{self.namespace['__module__']}.{self.namespace['__qualname__']}"
         )
 
+    def clone(self) -> "ExtendableClassDef":
+        """Clone the class definition, but not the class itself nor the information
+        about the hierarchy.
+
+        This is used to allow to recompute the registry from scratch by
+        starting from the original class definition. This definition is
+        then modified by the build process to define the class
+        hierarchy.
+        """
+        clone = ExtendableClassDef(
+            self.original_name, self.others_bases, self.namespace, self.metaclass
+        )
+        clone.original_cls = self.original_cls
+        return clone
+
 
 _extendable_class_defs_by_module: OrderedDict[
     str, List[ExtendableClassDef]
@@ -164,7 +179,7 @@ class ExtendableMeta(ABCMeta):
     def _wrap_class_methods(metacls, namespace: Dict[str, Any]) -> Dict[str, Any]:
         """Wrap classmethods defined into the namespace to delegate the call to the
         final class."""
-        new_namespace = {}
+        new_namespace: Dict[str, Any] = {}
         for key, value in namespace.items():
             if isinstance(value, classmethod):
                 func = value.__func__

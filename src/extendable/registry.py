@@ -49,7 +49,7 @@ class ExtendableClassesRegistry:
         if module in self._loaded_modules:
             return
         for cls_def in main._extendable_class_defs_by_module.get(module, []):
-            self.load_extendable_class_def(cls_def)
+            self.load_extendable_class_def(cls_def.clone())
         self._loaded_modules.add(module)
 
     def load_extendable_class_def(self, cls_def: main.ExtendableClassDef) -> None:
