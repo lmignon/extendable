@@ -179,7 +179,7 @@ class ExtendableMeta(ABCMeta):
     def _wrap_class_methods(metacls, namespace: Dict[str, Any]) -> Dict[str, Any]:
         """Wrap classmethods defined into the namespace to delegate the call to the
         final class."""
-        new_namespace = {}
+        new_namespace: Dict[str, Any] = {}
         for key, value in namespace.items():
             if isinstance(value, classmethod):
                 func = value.__func__
