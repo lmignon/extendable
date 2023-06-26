@@ -1,3 +1,19 @@
+0.0.4 (2023-06-26)
+==================
+
+Bugfixes
+--------
+
+- Fix registry rebuild (`Details <https://github.com/lmignon/extendable/pull/8/commits/120c1b749081f48893ca74d711091621c3c3481e>`_)
+- Add missing type annotation
+
+
+Deprecations and Removals
+-------------------------
+
+- Drop support fo py3.6
+
+
 0.0.3 (2022-11-01)
 ==================
 
