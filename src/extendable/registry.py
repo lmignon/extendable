@@ -130,7 +130,7 @@ class ExtendableClassesRegistry:
             extendableClass = types.new_class(
                 simple_name,
                 tuple(bases),
-                kwds={"metaclass": cls_def.metaclass},
+                kwds=dict(class_def.kwargs, metaclass=cls_def.metaclass),
                 exec_body=(
                     lambda ns, namespace=namespace: ns.update(namespace)  # type: ignore
                 ),
