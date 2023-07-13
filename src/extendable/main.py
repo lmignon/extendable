@@ -27,6 +27,7 @@ class ExtendableClassDef:
     hierarchy: List["ExtendableClassDef"]
     metaclass: "ExtendableMeta"
     original_cls: Type["ExtendableMeta"]
+    kwargs: Dict[str, Any]
 
     def __init__(
         self,
@@ -34,6 +35,7 @@ class ExtendableClassDef:
         bases: List[Any],
         namespace: Dict[str, Any],
         metaclass: "ExtendableMeta",
+        kwargs: Dict[str, Any],
     ) -> None:
         self.namespace = namespace
         self.name = namespace["__xreg_name__"]
@@ -42,6 +44,7 @@ class ExtendableClassDef:
         self.base_names = namespace["__xreg_base_names__"] or []
         self.hierarchy = [self]
         self.metaclass = metaclass
+        self.kwargs = kwargs
 
     def add_child(self, cls_def: "ExtendableClassDef") -> None:
         self.hierarchy.append(cls_def)
@@ -69,7 +72,11 @@ class ExtendableClassDef:
         hierarchy.
         """
         clone = ExtendableClassDef(
-            self.original_name, self.others_bases, self.namespace, self.metaclass
+            self.original_name,
+            self.others_bases,
+            self.namespace,
+            self.metaclass,
+            self.kwargs,
         )
         clone.original_cls = self.original_cls
         return clone
@@ -154,8 +161,9 @@ class ExtendableMeta(ABCMeta):
         cls_def = ExtendableClassDef(
             original_name=name,
             bases=tuple(other_bases),
-            namespace=namespace,
+            namespace=namespace.copy(),
             metaclass=metacls,
+            kwargs=kwargs,
         )
         __register_class_def__(
             namespace["__module__"],
@@ -191,9 +199,12 @@ class ExtendableMeta(ABCMeta):
                     # ensure that arggs and kwargs are conform to the
                     # initial signature
                     inspect.signature(_initial_func).bind(cls, *args, **kwargs)
-                    return getattr(cls._get_assembled_cls(), _method_name)(
-                        *args, **kwargs
-                    )
+                    try:
+                        return getattr(cls._get_assembled_cls(), _method_name)(
+                            *args, **kwargs
+                        )
+                    except KeyError:
+                        return _initial_func(cls, *args, **kwargs)
 
                 new_method_def = functools.partial(
                     new_method, _method_name=key, _initial_func=func

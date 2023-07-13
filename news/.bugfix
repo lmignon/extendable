@@ -1,0 +1,1 @@
+Preserve kwargs values in class defintion to ensure to properly create a concrete class with the same attributes as the original one.
