@@ -1,3 +1,12 @@
+0.0.5 (2023-07-13)
+==================
+
+Bugfixes
+--------
+
+- Preserve kwargs values in class defintion to ensure to properly create a concrete class with the same attributes as the original one.
+
+
 0.0.4 (2023-06-26)
 ==================
 
