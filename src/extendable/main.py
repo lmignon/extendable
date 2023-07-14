@@ -12,6 +12,7 @@ else:
 from abc import ABCMeta
 
 from .context import extendable_registry
+from .exceptions import RegistryNotInitializedError
 
 _registry_build_mode = False
 if TYPE_CHECKING:
@@ -249,4 +250,8 @@ class ExtendableMeta(ABCMeta):
         """An helper method to get the final class (the aggregated one) for the current
         class."""
         registry = registry if registry else extendable_registry.get()
+        if not registry:
+            raise RegistryNotInitializedError(
+                "Extendable classes registry is not initialized"
+            )
         return registry[cls.__xreg_name__]

@@ -1,0 +1,2 @@
+class RegistryNotInitializedError(Exception):
+    pass
