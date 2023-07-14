@@ -1,3 +1,19 @@
+1.0.0 (2023-07-14)
+==================
+
+Features
+--------
+
+- Access to the context variable used to store the current extended Classes
+  returns None if no context is available. Previously the access to the context
+  throws an exception if no context was available.
+- Calls to the classmethod "_get_assembled_cls" now raises RegistryNotInitializedError
+  if the registry is not initialized.
+- The metadaclass now provides the method `_wrap_class_method`. This method
+  can be used to wrap class methods in a way that when the method is called
+  the logic is delegated to the aggregated class if it exists.
+
+
 0.0.5 (2023-07-13)
 ==================
 
