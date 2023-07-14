@@ -18,6 +18,8 @@ _registry_build_mode = False
 if TYPE_CHECKING:
     from .registry import ExtendableClassesRegistry
 
+    AnyClassMethod = classmethod[Any, Any, Any]
+
 
 class ExtendableClassDef:
     name: str
@@ -191,28 +193,7 @@ class ExtendableMeta(ABCMeta):
         new_namespace: Dict[str, Any] = {}
         for key, value in namespace.items():
             if isinstance(value, classmethod):
-                func = value.__func__
-
-                @no_type_check
-                def new_method(
-                    cls, *args, _method_name=None, _initial_func=None, **kwargs
-                ):
-                    # ensure that arggs and kwargs are conform to the
-                    # initial signature
-                    inspect.signature(_initial_func).bind(cls, *args, **kwargs)
-                    try:
-                        return getattr(cls._get_assembled_cls(), _method_name)(
-                            *args, **kwargs
-                        )
-                    except KeyError:
-                        return _initial_func(cls, *args, **kwargs)
-
-                new_method_def = functools.partial(
-                    new_method, _method_name=key, _initial_func=func
-                )
-                # preserve signature for IDE
-                functools.update_wrapper(new_method_def, func)
-                new_namespace[key] = classmethod(new_method_def)
+                new_namespace[key] = metacls._wrap_class_method(value, key)
             else:
                 new_namespace[key] = value
         return new_namespace
@@ -220,6 +201,35 @@ class ExtendableMeta(ABCMeta):
     @classmethod
     def _is_extendable(metacls, cls: Type[Any]) -> bool:
         return issubclass(type(cls), ExtendableMeta)
+
+    @classmethod
+    def _wrap_class_method(
+        metacls, method: "AnyClassMethod", method_name: str
+    ) -> "AnyClassMethod":
+        """Wrap a class method to delegate the call to the final class.
+
+        In addition to preserve the signature and the docstring, this
+        method will also preserve the validation of args and kwargs
+        against the signature of the initial method at method call.
+        """
+        func = method.__func__
+
+        @no_type_check
+        def new_method(cls, *args, _method_name=None, _initial_func=None, **kwargs):
+            # ensure that args and kwargs are conform to the
+            # initial signature
+            inspect.signature(_initial_func).bind(cls, *args, **kwargs)
+            try:
+                return getattr(cls._get_assembled_cls(), _method_name)(*args, **kwargs)
+            except (RegistryNotInitializedError, KeyError):
+                return _initial_func(cls, *args, **kwargs)
+
+        new_method_def = functools.partial(
+            new_method, _method_name=method_name, _initial_func=func
+        )
+        # preserve signature for IDE
+        functools.update_wrapper(new_method_def, func)
+        return classmethod(new_method_def)
 
     @no_type_check
     def __call__(cls, *args, **kwargs) -> "ExtendableMeta":
