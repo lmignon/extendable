@@ -109,6 +109,8 @@ class ExtendableMeta(ABCMeta):
         """create the expected class and collect the class definition that will be used
         at the end of registry load process to build the final class."""
         class_def = None
+        if isinstance(extends, bool) and extends:
+            extends = bases[0]
         if not _registry_build_mode:
             namespace = metacls._prepare_namespace(
                 name=name, bases=bases, namespace=namespace, extends=extends, **kwargs
