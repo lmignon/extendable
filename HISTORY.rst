@@ -1,3 +1,12 @@
+1.1.0 (2023-07-15)
+==================
+
+Features
+--------
+
+- Simpler syntax for defining a class extending another class. The `extends` parameter now accepts `True` as its value. `class PersonExt(Person, extends=True)` means that `PersonExt` extends its first base class: `Person`. This is equivalent to `class PersonExt(Person, extends=Person)`. (`#2 <https://github.com/lmignon/extendable/issues/2>`_)
+
+
 1.0.0 (2023-07-14)
 ==================
 
