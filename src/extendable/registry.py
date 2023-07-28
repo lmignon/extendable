@@ -11,6 +11,21 @@ class ExtendableRegistryListener:
     def on_registry_initialized(self, registry: "ExtendableClassesRegistry") -> None:
         ...
 
+    def before_init_registry(
+        self,
+        registry: "ExtendableClassesRegistry",
+        module_matchings: Optional[List[str]] = None,
+    ) -> None:
+        """Called before the registry is initialized.
+
+        This hook allows you to add your own specific module matching
+        rules into the provided one. A common use case is when you
+        define a base Extendable class into a specific python module and
+        you want to ensure that this base class is always loaded when
+        the registry is initialized.
+        """
+        ...
+
 
 class ExtendableClassesRegistry:
     """Store all the extendableClasses and allow to retrieve them by name.
@@ -158,6 +173,8 @@ class ExtendableClassesRegistry:
         The module list accept wildcard expression as last character
         """
         module_matchings = module_matchings if module_matchings else ["*"]
+        for listener in self.listeners:
+            listener.before_init_registry(self, module_matchings)
         with self.build_mode(), ModuleIndex() as idx:
             for match in module_matchings:
                 for module in idx.get_modules(match):
