@@ -1,3 +1,14 @@
+1.2.0 (2023-07-28)
+==================
+
+Features
+--------
+
+- Add a  `before_init_registry` hook method into the `ExtendableRegistryListener` class.
+  This methods allows you to udpate the list of modules to load into the registry if
+  you need to do so. (`#before_hook <https://github.com/lmignon/extendable/pull/13>`_)
+
+
 1.1.0 (2023-07-15)
 ==================
 
