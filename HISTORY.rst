@@ -1,3 +1,12 @@
+1.2.1 (2023-09-19)
+==================
+
+Bugfixes
+--------
+
+- Fix isinstance and issublcass method on multi levels inheritance hierarchy. (`#14 <https://github.com/lmignon/extendable/pull/14>`_)
+
+
 1.2.0 (2023-07-28)
 ==================
 
