@@ -256,3 +256,49 @@ def test_meta_subclass():
         pass
 
     assert MyMeta._is_extendable(MyExt)
+
+
+def test_issubclass_multi_level(test_registry):
+    class A(metaclass=ExtendableMeta):
+        pass
+
+    class B(A):
+        pass
+
+    class C(B):
+        pass
+
+    test_registry.init_registry()
+
+    assert issubclass(C, B)
+    assert issubclass(C().__class__, B)
+    assert issubclass(C().__class__, B().__class__)
+    assert issubclass(C, B().__class__)
+    assert issubclass(C, A)
+    assert issubclass(C().__class__, A)
+    assert issubclass(C, A().__class__)
+    assert issubclass(C().__class__, A().__class__)
+    assert issubclass(B, A)
+    assert issubclass(B().__class__, A)
+    assert issubclass(B().__class__, A().__class__)
+    assert issubclass(B, A().__class__)
+
+
+def test_isinstance_multi_level(test_registry):
+    class A(metaclass=ExtendableMeta):
+        pass
+
+    class B(A):
+        pass
+
+    class C(B):
+        pass
+
+    test_registry.init_registry()
+
+    assert isinstance(C(), B)
+    assert isinstance(C(), B().__class__)
+    assert isinstance(C(), A)
+    assert isinstance(C(), A().__class__)
+    assert isinstance(B(), A)
+    assert isinstance(B(), A().__class__)

@@ -114,7 +114,7 @@ class ExtendableClassesRegistry:
         self, class_def: main.ExtendableClassDef
     ) -> main.ExtendableMeta:
         """Build the class hierarchy from the first one to the last one into the
-        hierachy definition."""
+        hierarchy definition."""
         name = class_def.name
         for idx, cls_def in enumerate(class_def.hierarchy):
             # retrieve extendable_parent
@@ -153,6 +153,9 @@ class ExtendableClassesRegistry:
             base = cast(main.ExtendableMeta, extendableClass)
             self[name] = base
         base.__xreg_all_base_names__ = set(class_def.base_names)
+        for _base in bases:
+            if hasattr(_base, "__xreg_all_base_names__"):
+                base.__xreg_all_base_names__ |= _base.__xreg_all_base_names__
         return base
 
     @contextmanager

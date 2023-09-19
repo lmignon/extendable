@@ -254,6 +254,9 @@ class ExtendableMeta(ABCMeta):
         """Implement issubclass(sub, cls)."""
         if hasattr(subclass, "__xreg_all_base_names__"):
             return cls.__xreg_name__ in subclass.__xreg_all_base_names__
+        if hasattr(subclass, "__xreg_name__"):
+            _subclass = subclass._get_assembled_cls()
+            return issubclass(_subclass, cls)
         return isinstance(subclass, type) and super().__subclasscheck__(subclass)
 
     def _get_assembled_cls(

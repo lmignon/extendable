@@ -1,0 +1,1 @@
+Fix isinstance and issublcass method on multi levels inheritance hierarchy.
