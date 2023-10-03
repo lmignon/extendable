@@ -121,13 +121,18 @@ class ExtendableClassesRegistry:
             # determine all the classes the component should inherit from
             bases = LastOrderedSet[main.ExtendableMeta]()
             for base_name in cls_def.base_names:
+                # the base_names contains all the bases for the final aggregated
+                # class. Here we check that all the base required to build the
+                # current hierarchy are already build.
                 if base_name not in self:
                     if idx != 0 or base_name != cls_def.name:
                         raise TypeError(
                             f"Pydnatic class '{name}' extends an non-existing "
                             f"extendable class '{base_name}'."
                         )
-                else:
+                elif base_name in cls_def.original_base_names:
+                    # The bases to inherit for the current class are the one
+                    # defined into the original class definition.
                     parent_class = self[base_name]
                     bases.add(parent_class)
             for other_base in class_def.others_bases:

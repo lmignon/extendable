@@ -1,0 +1,3 @@
+Fix error when a class is extended to add others aggregated classes as base
+classes. Before this fix, the builder used the list of all base classes
+the final class should have as base classes for every class into the hierarchy.
