@@ -24,6 +24,7 @@ if TYPE_CHECKING:
 class ExtendableClassDef:
     name: str
     base_names: List[str]
+    original_base_names: List[str]
     namespace: Dict[str, Any]
     original_name: str
     others_bases: List[Any]
@@ -44,7 +45,8 @@ class ExtendableClassDef:
         self.name = namespace["__xreg_name__"]
         self.original_name = original_name
         self.others_bases = bases
-        self.base_names = namespace["__xreg_base_names__"] or []
+        self.base_names = namespace["__xreg_base_names__"].copy() or []
+        self.original_base_names = self.base_names.copy()
         self.hierarchy = [self]
         self.metaclass = metaclass
         self.kwargs = kwargs

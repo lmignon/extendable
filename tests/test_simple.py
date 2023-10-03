@@ -258,6 +258,35 @@ def test_meta_subclass():
     assert MyMeta._is_extendable(MyExt)
 
 
+def test_mixin_inheritance(test_registry):
+    class BaseMixin(metaclass=ExtendableMeta):
+        def test(self):
+            return "base"
+
+    class MixinA(BaseMixin):
+        def test_a(self):
+            return "A"
+
+    class MixinB(BaseMixin):
+        def test_b(self):
+            return "B"
+
+    class ExtendedB(MixinB, extends=True):
+        def test_b(self):
+            res = super().test_b()
+            return res + " extended"
+
+    class Mixin(MixinA, MixinB, extends=MixinB):
+        pass
+
+    test_registry.init_registry()
+
+    obj = Mixin()
+    assert obj.test() == "base"
+    assert obj.test_a() == "A"
+    assert obj.test_b() == "B extended"
+
+
 def test_issubclass_multi_level(test_registry):
     class A(metaclass=ExtendableMeta):
         pass
