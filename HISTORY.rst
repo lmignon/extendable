@@ -1,3 +1,14 @@
+1.2.2 (2023-10-03)
+==================
+
+Bugfixes
+--------
+
+- Fix error when a class is extended to add others aggregated classes as parent
+  classes. Before this fix, the builder used the list of all base classes of
+  the final class as base classes for every class into the hierarchy. (`#15 <https://github.com/lmignon/extendable/issues/15>`_)
+
+
 1.2.1 (2023-09-19)
 ==================
 
