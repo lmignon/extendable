@@ -251,6 +251,18 @@ class ExtendableMeta(ABCMeta):
     ###############################################################
     # concrete methods provided to the final class by the metaclass
     ###############################################################
+    def __instancecheck__(self, instance: Any) -> bool:  # noqa: B902
+        """Implement issubclass(sub, cls)."""
+        if not hasattr(instance, "__xreg_name__"):
+            return False
+        
+        if instance.__xreg_name__ == self.__xreg_name__:
+            # this is the same class
+            return True
+        # self is a class and instance is an instance of a class
+        if self.__xreg_name__ in instance.__xreg_all_base_names__:
+            return True
+        return super().__instancecheck__(instance)
 
     def __subclasscheck__(cls, subclass: Any) -> bool:  # noqa: B902
         """Implement issubclass(sub, cls)."""

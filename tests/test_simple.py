@@ -331,3 +331,23 @@ def test_isinstance_multi_level(test_registry):
     assert isinstance(C(), A().__class__)
     assert isinstance(B(), A)
     assert isinstance(B(), A().__class__)
+
+
+def test_isinstance_no_extend(test_registry):
+    # in this test our class are not extended
+    # we chech that the isinstance works as expected
+    # when we have no extends by the classes
+    # are extendable by default
+    class A(metaclass=ExtendableMeta):
+        pass
+
+    class B(A):
+        pass
+
+    test_registry.init_registry()
+
+    assert isinstance(A(), A)
+    assert isinstance(B(), A)
+    assert isinstance(B(), B)
+    assert isinstance(B(), A().__class__)
+    assert isinstance(B(), B().__class__)
