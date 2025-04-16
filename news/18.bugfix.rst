@@ -1,1 +1,0 @@
-When checking if an instance of extendable class is a type of itself, first check if both classes have the same __xreg_name__ attribute.

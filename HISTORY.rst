@@ -1,3 +1,12 @@
+1.3.0 (2025-04-16)
+==================
+
+Bugfixes
+--------
+
+- When checking if an instance of extendable class is a type of itself, first check if both classes have the same __xreg_name__ attribute. (`#18 <https://github.com/lmignon/extendable/issues/18>`_)
+
+
 1.2.2 (2023-10-03)
 ==================
 
