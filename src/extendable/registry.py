@@ -8,8 +8,9 @@ from .utils import LastOrderedSet
 
 
 class ExtendableRegistryListener:
-    def on_registry_initialized(self, registry: "ExtendableClassesRegistry") -> None:
-        ...
+    def on_registry_initialized(
+        self, registry: "ExtendableClassesRegistry"
+    ) -> None: ...
 
     def before_init_registry(
         self,

@@ -87,9 +87,9 @@ class ExtendableClassDef:
         return clone
 
 
-_extendable_class_defs_by_module: OrderedDict[
-    str, List[ExtendableClassDef]
-] = collections.OrderedDict()
+_extendable_class_defs_by_module: OrderedDict[str, List[ExtendableClassDef]] = (
+    collections.OrderedDict()
+)
 
 
 def __register_class_def__(module: str, cls_def: ExtendableClassDef) -> None:
@@ -108,7 +108,7 @@ class ExtendableMeta(ABCMeta):
 
     @no_type_check
     def __new__(metacls, name, bases, namespace, extends=None, **kwargs):
-        """create the expected class and collect the class definition that will be used
+        """Create the expected class and collect the class definition that will be used
         at the end of registry load process to build the final class."""
         class_def = None
         if isinstance(extends, bool) and extends:
@@ -251,6 +251,18 @@ class ExtendableMeta(ABCMeta):
     ###############################################################
     # concrete methods provided to the final class by the metaclass
     ###############################################################
+    def __instancecheck__(self, instance: Any) -> bool:  # noqa: B902
+        """Implement issubclass(sub, cls)."""
+        if not hasattr(instance, "__xreg_name__"):
+            return False
+
+        if instance.__xreg_name__ == self.__xreg_name__:
+            # this is the same class
+            return True
+        # self is a class and instance is an instance of a class
+        if self.__xreg_name__ in instance.__xreg_all_base_names__:
+            return True
+        return super().__instancecheck__(instance)
 
     def __subclasscheck__(cls, subclass: Any) -> bool:  # noqa: B902
         """Implement issubclass(sub, cls)."""
