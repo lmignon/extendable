@@ -1,4 +1,5 @@
 """Test registry loading."""
+
 from extendable.registry import ExtendableClassesRegistry, ExtendableRegistryListener
 
 
