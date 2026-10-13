@@ -37,9 +37,26 @@ Changelog = "https://github.com/lmignon/extendable/blob/master/HISTORY.rst"
 [tool.flit.sdist]
 exclude = [".github"]
 
-[tool.isort]
-profile = "black"
-multi_line_output = 3
+[tool.ruff]
+# keep the examples of the documentation as written (e.g. the "#>" outputs)
+extend-exclude = ["*.md"]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "UP",  # pyupgrade
+]
+ignore = [
+    "E501",  # line too long, handled by the formatter
+]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
 
 [tool.coverage.run]
 branch = true
