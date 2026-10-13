@@ -93,7 +93,6 @@ _extendable_class_defs_by_module: OrderedDict[str, List[ExtendableClassDef]] = (
 
 
 def __register_class_def__(module: str, cls_def: ExtendableClassDef) -> None:
-    global _extendable_class_defs_by_module
     if module not in _extendable_class_defs_by_module:
         _extendable_class_defs_by_module[module] = []
     _extendable_class_defs_by_module[module].append(cls_def)

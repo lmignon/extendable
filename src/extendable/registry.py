@@ -1,10 +1,23 @@
 import sqlite3
 import types
 from contextlib import contextmanager
-from typing import Any, Dict, Iterator, List, Optional, Set, cast
+from typing import (
+    Any,
+    Dict,
+    Iterator,
+    List,
+    Optional,
+    Set,
+    TypeVar,
+    Union,
+    cast,
+    overload,
+)
 
 from . import main
 from .utils import LastOrderedSet
+
+_T = TypeVar("_T")
 
 
 class ExtendableRegistryListener:
@@ -55,7 +68,13 @@ class ExtendableClassesRegistry:
     def __contains__(self, key: str) -> bool:
         return key in self._extendable_classes
 
-    def get(self, key: str, default: Any = ...) -> main.ExtendableMeta:
+    @overload
+    def get(self, key: str) -> main.ExtendableMeta: ...
+
+    @overload
+    def get(self, key: str, default: _T) -> Union[main.ExtendableMeta, _T]: ...
+
+    def get(self, key: str, default: Any = ...) -> Any:
         return self._extendable_classes.get(key, default)
 
     def __iter__(self) -> Iterator[str]:
