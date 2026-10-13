@@ -47,8 +47,8 @@ class ExtendableClassesRegistry:
     The key is the ``cls.__module__ + "." + cls.__qualname__`` of the
     extendable classes.
 
-    The :attr:`ready` attribute must be set to ``True`` when all the extendable classes
-    are loaded.
+    The :attr:`ready` attribute must be set to ``True`` when all the
+    extendable classes are loaded.
     """
 
     listeners: List[ExtendableRegistryListener] = []
@@ -238,12 +238,8 @@ class ModuleIndex:
         into the same order as the initial loading order
         """
         self._conn.execute(
-            """
-            CREATE TABLE modules (
-                name TEXT not null PRIMARY KEY,
-                idx INTEGER not null
-            )
-        """
+            "CREATE TABLE modules "
+            "(name TEXT not null PRIMARY KEY, idx INTEGER not null)"
         )
         records = (
             (m, idx)
