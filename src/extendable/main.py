@@ -248,6 +248,22 @@ class ExtendableMeta(ABCMeta):
             return super().__call__(*args, **kwargs)
         return cls._get_assembled_cls()(*args, **kwargs)
 
+    def __repr__(cls) -> str:
+        """Add to the representation of the classes built by the registry their level
+        into the class hierarchy and the class definition they come from.
+
+        e.g. ``<class 'addon_b.Location' #2 (addon_b.LocationCode)>``
+        """
+        level = cls.__dict__.get("__xreg_level__")
+        if level is None:
+            return super().__repr__()
+        name = f"{cls.__module__}.{cls.__qualname__}"
+        original_cls = cls.__dict__["__xreg_original_cls__"]
+        original_name = f"{original_cls.__module__}.{original_cls.__qualname__}"
+        if original_name == name:
+            return f"<class '{name}' #{level}>"
+        return f"<class '{name}' #{level} ({original_name})>"
+
     ###############################################################
     # concrete methods provided to the final class by the metaclass
     ###############################################################

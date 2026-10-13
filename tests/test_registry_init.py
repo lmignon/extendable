@@ -90,3 +90,23 @@ def test_init_registry_listener(test_registry, mocker):
         listener.on_registry_initialized.assert_called_with(test_registry)
     finally:
         ExtendableClassesRegistry.listeners = listeners
+
+
+def test_built_classes_repr(test_registry, sys_modules_cleanup):
+    """The classes built by the registry keep the name of the original class but their
+    representation shows their level into the hierarchy and the class definition they
+    come from."""
+    from tests.mod_base.base import Base  # NOQA isort:skip
+    import tests.mod_ext1  # NOQA isort:skip
+    import tests.mod_ext2  # NOQA isort:skip
+
+    test_registry.init_registry()
+    mro = type(Base()).__mro__
+    assert [cls.__qualname__ for cls in mro[:3]] == ["Base", "Base", "Base"]
+    assert [repr(cls) for cls in mro[:3]] == [
+        "<class 'tests.mod_ext2.base.Base' #2 (tests.mod_ext2.base.ExtBase)>",
+        "<class 'tests.mod_ext1.base.Base' #1 (tests.mod_ext1.base.ExtBase)>",
+        "<class 'tests.mod_base.base.Base' #0>",
+    ]
+    # the original classes keep the default representation
+    assert repr(Base) == "<class 'tests.mod_base.base.Base'>"

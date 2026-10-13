@@ -139,13 +139,20 @@ class ExtendableClassesRegistry:
             for other_base in class_def.others_bases:
                 bases.add(other_base)
             simple_name = name.split(".")[-1]
-            uniq_class_name = f"{simple_name}{idx}"
             namespace = cls_def.namespace
             namespace.update(
                 {
-                    "__qualname__": uniq_class_name,
+                    # all the classes of the hierarchy keep the qualified name
+                    # of the original class since they are the same class
+                    # for the end user (e.g. in error messages or schemas)
+                    "__qualname__": class_def.original_cls.__qualname__,
                     "_is_aggregated_class": True,
                     "_original_cls": cls_def.original_cls,
+                    # same information as dunder attributes, since names
+                    # starting with an underscore can be altered by third
+                    # party metaclasses (e.g. pydantic private attributes)
+                    "__xreg_level__": idx,
+                    "__xreg_original_cls__": cls_def.original_cls,
                 }
             )
             extendableClass = types.new_class(
