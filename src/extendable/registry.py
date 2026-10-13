@@ -1,15 +1,10 @@
 import sqlite3
 import types
+from collections.abc import Iterator
 from contextlib import contextmanager
 from typing import (
     Any,
-    Dict,
-    Iterator,
-    List,
-    Optional,
-    Set,
     TypeVar,
-    Union,
     cast,
     overload,
 )
@@ -28,7 +23,7 @@ class ExtendableRegistryListener:
     def before_init_registry(
         self,
         registry: "ExtendableClassesRegistry",
-        module_matchings: Optional[List[str]] = None,
+        module_matchings: list[str] | None = None,
     ) -> None:
         """Called before the registry is initialized.
 
@@ -51,13 +46,13 @@ class ExtendableClassesRegistry:
     extendable classes are loaded.
     """
 
-    listeners: List[ExtendableRegistryListener] = []
+    listeners: list[ExtendableRegistryListener] = []
 
     def __init__(self) -> None:
-        self._extendable_classes: Dict[str, main.ExtendableMeta] = {}
-        self._loaded_modules: Set[str] = set()
+        self._extendable_classes: dict[str, main.ExtendableMeta] = {}
+        self._loaded_modules: set[str] = set()
         self.ready: bool = False
-        self._extendable_class_defs: Dict[str, main.ExtendableClassDef] = {}
+        self._extendable_class_defs: dict[str, main.ExtendableClassDef] = {}
 
     def __getitem__(self, key: str) -> main.ExtendableMeta:
         return self._extendable_classes[key]
@@ -72,7 +67,7 @@ class ExtendableClassesRegistry:
     def get(self, key: str) -> main.ExtendableMeta: ...
 
     @overload
-    def get(self, key: str, default: _T) -> Union[main.ExtendableMeta, _T]: ...
+    def get(self, key: str, default: _T) -> main.ExtendableMeta | _T: ...
 
     def get(self, key: str, default: Any = ...) -> Any:
         return self._extendable_classes.get(key, default)
@@ -198,7 +193,7 @@ class ExtendableClassesRegistry:
         finally:
             main._registry_build_mode = False
 
-    def init_registry(self, module_matchings: Optional[List[str]] = None) -> None:
+    def init_registry(self, module_matchings: list[str] | None = None) -> None:
         """Build the extendable classes by aggregating the classes declared in the given
         module matching list in the same order as the list one. IOW, the mro into the
         aggregated classes will be the inverse one of the given module list. If no
@@ -247,7 +242,7 @@ class ModuleIndex:
         )
         self._conn.executemany("INSERT INTO modules VALUES (?, ?)", records)
 
-    def get_modules(self, module_matching: str) -> List[str]:
+    def get_modules(self, module_matching: str) -> list[str]:
         query = "SELECT name from modules where name like ? order by idx ASC"
         result = self._conn.execute(query, [module_matching.replace("*", "%")])
         return [r[0] for r in result.fetchall()]

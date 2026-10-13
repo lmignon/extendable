@@ -2,15 +2,11 @@ import collections
 import functools
 import inspect
 from abc import ABCMeta
+from collections import OrderedDict
 from typing import (
     TYPE_CHECKING,
     Any,
-    Dict,
-    List,
     Optional,
-    OrderedDict,
-    Set,
-    Type,
     no_type_check,
 )
 
@@ -26,23 +22,23 @@ if TYPE_CHECKING:
 
 class ExtendableClassDef:
     name: str
-    base_names: List[str]
-    original_base_names: List[str]
-    namespace: Dict[str, Any]
+    base_names: list[str]
+    original_base_names: list[str]
+    namespace: dict[str, Any]
     original_name: str
-    others_bases: List[Any]
-    hierarchy: List["ExtendableClassDef"]
+    others_bases: list[Any]
+    hierarchy: list["ExtendableClassDef"]
     metaclass: "ExtendableMeta"
-    original_cls: Type["ExtendableMeta"]
-    kwargs: Dict[str, Any]
+    original_cls: type["ExtendableMeta"]
+    kwargs: dict[str, Any]
 
     def __init__(
         self,
         original_name: str,
-        bases: List[Any],
-        namespace: Dict[str, Any],
+        bases: list[Any],
+        namespace: dict[str, Any],
         metaclass: "ExtendableMeta",
-        kwargs: Dict[str, Any],
+        kwargs: dict[str, Any],
     ) -> None:
         self.namespace = namespace
         self.name = namespace["__xreg_name__"]
@@ -90,7 +86,7 @@ class ExtendableClassDef:
         return clone
 
 
-_extendable_class_defs_by_module: OrderedDict[str, List[ExtendableClassDef]] = (
+_extendable_class_defs_by_module: OrderedDict[str, list[ExtendableClassDef]] = (
     collections.OrderedDict()
 )
 
@@ -102,9 +98,9 @@ def __register_class_def__(module: str, cls_def: ExtendableClassDef) -> None:
 
 
 class ExtendableMeta(ABCMeta):
-    __xreg_base_names__: List[str]
+    __xreg_base_names__: list[str]
     __xreg_name__: str
-    __xreg_all_base_names__: Set[str]
+    __xreg_all_base_names__: set[str]
     _is_aggregated_class: bool
     _original_cls: "ExtendableMeta"
 
@@ -193,10 +189,10 @@ class ExtendableMeta(ABCMeta):
         return super().__new__(metacls, name, bases, namespace, **kwargs)
 
     @classmethod
-    def _wrap_class_methods(metacls, namespace: Dict[str, Any]) -> Dict[str, Any]:
+    def _wrap_class_methods(metacls, namespace: dict[str, Any]) -> dict[str, Any]:
         """Wrap classmethods defined into the namespace to delegate the call to the
         final class."""
-        new_namespace: Dict[str, Any] = {}
+        new_namespace: dict[str, Any] = {}
         for key, value in namespace.items():
             if isinstance(value, classmethod):
                 new_namespace[key] = metacls._wrap_class_method(value, key)
@@ -205,7 +201,7 @@ class ExtendableMeta(ABCMeta):
         return new_namespace
 
     @classmethod
-    def _is_extendable(metacls, cls: Type[Any]) -> bool:
+    def _is_extendable(metacls, cls: type[Any]) -> bool:
         return issubclass(type(cls), ExtendableMeta)
 
     @classmethod
