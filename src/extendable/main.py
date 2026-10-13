@@ -1,15 +1,18 @@
 import collections
 import functools
 import inspect
-import sys
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Type, no_type_check
-
-if sys.version_info >= (3, 7):
-    from typing import OrderedDict
-else:
-    from typing_extensions import OrderedDict
-
 from abc import ABCMeta
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    List,
+    Optional,
+    OrderedDict,
+    Set,
+    Type,
+    no_type_check,
+)
 
 from .context import extendable_registry
 from .exceptions import RegistryNotInitializedError

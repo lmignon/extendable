@@ -13,12 +13,8 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dynamic = ["version", "description"]
-dependencies = [
-    "contextvars;python_version<'3.7'",
-    "types-contextvars;python_version<'3.7'",
-    "typing_extensions;python_version<'3.7'",
-]
-requires-python = ">=3.6"
+dependencies = []
+requires-python = ">=3.10"
 
 [project.optional-dependencies]
 test = [
