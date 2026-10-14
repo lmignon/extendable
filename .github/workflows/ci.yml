@@ -6,14 +6,17 @@ on:
     branches: ["master"]
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   pre-commit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
-          python-version: "3.10" # Specify the desired Python version
+          python-version: "3.13"
       - uses: pre-commit/action@v3.0.1
         with:
           extra_args: --all-files
@@ -24,10 +27,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "pypy-3.7", "3.11", "3.12", "3.13"]
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14", "pypy-3.10"]
     steps:
-      - uses: "actions/checkout@v2"
-      - uses: "actions/setup-python@v2"
+      - uses: "actions/checkout@v7"
+      - uses: "actions/setup-python@v7"
         with:
           python-version: "${{ matrix.python-version }}"
       - name: "Install dependencies"
@@ -40,7 +43,7 @@ jobs:
       - name: "Run tox targets for ${{ matrix.python-version }}"
         run: |
           python -m tox
-      - uses: codecov/codecov-action@v2
+      - uses: codecov/codecov-action@v7
         with:
           token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
           flags: unittests # optional

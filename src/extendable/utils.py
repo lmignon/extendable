@@ -1,5 +1,6 @@
 from collections import OrderedDict
-from typing import Generic, Iterator, MutableSet, Optional, Tuple, TypeVar
+from collections.abc import Iterator, MutableSet
+from typing import Generic, TypeVar
 
 T = TypeVar("T")
 
@@ -9,7 +10,7 @@ class OrderedSet(MutableSet[T], Generic[T]):
 
     __slots__ = ["_map"]
 
-    def __init__(self, elems: Optional[Tuple[T]] = None) -> None:
+    def __init__(self, elems: tuple[T] | None = None) -> None:
         self._map: OrderedDict[T, None] = OrderedDict(
             (elem, None) for elem in elems or []
         )

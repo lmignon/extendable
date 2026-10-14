@@ -1,9 +1,4 @@
-from typing import Union
-
-try:
-    from typing import Literal
-except ImportError:
-    from typing_extensions import Literal
+from typing import Literal
 
 from extendable import ExtendableMeta
 
@@ -32,7 +27,7 @@ def test_simple_extends(test_registry):
 
     test_registry.init_registry()
 
-    result: Union[A, B] = A()
+    result: A | B = A()
     assert isinstance(result, A)
     assert isinstance(result, B)
     assert result.prop_b == 2
@@ -77,7 +72,7 @@ def test_simple_extends_with_boolean(test_registry):
 
     test_registry.init_registry()
 
-    result: Union[A, B, C] = A()
+    result: A | B | C = A()
     assert isinstance(result, A)
     assert isinstance(result, B)
     assert isinstance(result, C)
@@ -124,7 +119,7 @@ def test_simple_extends_same_class(test_registry):
 
     test_registry.init_registry()
 
-    result: Union[A, B, C] = A()
+    result: A | B | C = A()
     assert isinstance(result, A)
     assert isinstance(result, B)
     assert isinstance(result, C)
