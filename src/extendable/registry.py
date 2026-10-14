@@ -104,10 +104,13 @@ class ExtendableClassesRegistry:
                         f"extendable class '{class_def.name}' inherits from"
                         f"undefined base '{base}'"
                     )
-        to_build = self._extendable_class_defs.items()
+        # all the classes are (re)built: an extension of a class used as base or
+        # mixin by other classes can be loaded by a new initialization
+        to_build = list(self._extendable_class_defs.items())
         while to_build:
             remaining = []
-            for name, class_def in self._extendable_class_defs.items():
+            # only the classes waiting for their bases are built by the next pass
+            for name, class_def in to_build:
                 if not class_def.is_mixed_bases:
                     self.build_extendable_class(class_def)
                     continue
@@ -123,7 +126,7 @@ class ExtendableClassesRegistry:
                     self.build_extendable_class(class_def)
                     continue
                 remaining.append((name, class_def))
-            to_build = remaining  # type: ignore
+            to_build = remaining
 
     def build_extendable_class(
         self, class_def: main.ExtendableClassDef
