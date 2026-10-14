@@ -163,20 +163,27 @@ method into the metaclass.
 To run tests, use `tox`. You will get a test coverage report in `htmlcov/index.html`.
 An easy way to install tox is `pipx install tox`.
 
-This project uses pre-commit to enforce linting (among which black for code formating,
-isort for sorting imports, and mypy for type checking).
+This project uses pre-commit to enforce linting and formatting (ruff). The type
+checking (mypy) is run by `tox -e typing`.
 
 To make sure linters run locally on each of your commits, install pre-commit
 (`pipx install pre-commit` is recommended), and run `pre-commit install` in your
 local clone of the extendable repository.
 
-To release:
+## Release
 
- * run ``bumpversion patch|minor|major` --list`
- * Check the `new_version` value returned by the previous command
- * run `towncrier build`.
- * Inspect and commit the updated HISTORY.rst.
- * `git tag {new_version} ; git push --tags`.
+The version of the package is computed from the git tags (hatch-vcs) and the
+changelog is built from the news fragments (towncrier).
+
+* Each change worth mentioning into the changelog comes with a news fragment
+  into the `news` directory: `news/<issue number>.<type>`, or
+  `news/+<name>.<type>` for a change without issue, where `<type>` is one of
+  `feature`, `bugfix`, `doc`, `removal` or `misc`.
+* To release a new version, run the `release` workflow from the GitHub "Actions"
+  tab and choose the part of the version to increase (`patch`, `minor` or
+  `major`). Once the run is approved (required reviewers of the
+  `release-approval` environment), the workflow updates `HISTORY.rst`, tags the
+  release, publishes the package to PyPI and creates the GitHub release.
 
 ## Contributing
 

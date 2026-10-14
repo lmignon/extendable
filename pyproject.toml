@@ -1,9 +1,10 @@
 [build-system]
-requires = ["flit_core >=3.2,<4"]
-build-backend = "flit_core.buildapi"
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
 
 [project]
 name = "extendable"
+description = "A lib to define class extendable at runtime."
 authors = [{name = "Laurent Mignon", email = "laurent.mignon@acsone.eu"}]
 readme = "README.md"
 license = {file = "LICENSE"}
@@ -12,7 +13,7 @@ classifiers = [
     "Intended Audience :: Developers",
     "Operating System :: OS Independent",
 ]
-dynamic = ["version", "description"]
+dynamic = ["version"]
 dependencies = []
 requires-python = ">=3.10"
 
@@ -25,17 +26,20 @@ test = [
 mypy = [
     "mypy",
 ]
-release = [
-    "towncrier",
-    "bumpversion",
-]
 
 [project.urls]
 Source = "https://github.com/lmignon/extendable"
 Changelog = "https://github.com/lmignon/extendable/blob/master/HISTORY.rst"
 
-[tool.flit.sdist]
+[tool.hatch.version]
+# the version is computed from the git tags
+source = "vcs"
+
+[tool.hatch.build.targets.sdist]
 exclude = [".github"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/extendable"]
 
 [tool.ruff]
 # keep the examples of the documentation as written (e.g. the "#>" outputs)
@@ -72,8 +76,7 @@ exclude_lines = [
 ]
 
 [tool.towncrier]
-package = "extendable"
-package_dir = "src"
+name = "Extendable"
 filename = "HISTORY.rst"
 directory = "news"
 issue_format = "`#{issue} <https://github.com/lmignon/extendable/issues/{issue}>`_"
