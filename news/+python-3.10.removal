@@ -1,0 +1,2 @@
+Drop support for python < 3.10 (python 3.9 and older versions have reached
+their end of life). Add support for python 3.14.

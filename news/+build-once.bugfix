@@ -1,0 +1,1 @@
+Each class is built once during registry initialization. Previously, if a class had to wait for one of its bases, all classes were rebuilt on each pass, potentially leaving the waiting class based on a class that was later replaced in the registry

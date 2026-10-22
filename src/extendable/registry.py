@@ -1,10 +1,18 @@
 import sqlite3
 import types
+from collections.abc import Iterator
 from contextlib import contextmanager
-from typing import Any, Dict, Iterator, List, Optional, Set, cast
+from typing import (
+    Any,
+    TypeVar,
+    cast,
+    overload,
+)
 
 from . import main
 from .utils import LastOrderedSet
+
+_T = TypeVar("_T")
 
 
 class ExtendableRegistryListener:
@@ -15,7 +23,7 @@ class ExtendableRegistryListener:
     def before_init_registry(
         self,
         registry: "ExtendableClassesRegistry",
-        module_matchings: Optional[List[str]] = None,
+        module_matchings: list[str] | None = None,
     ) -> None:
         """Called before the registry is initialized.
 
@@ -34,17 +42,17 @@ class ExtendableClassesRegistry:
     The key is the ``cls.__module__ + "." + cls.__qualname__`` of the
     extendable classes.
 
-    The :attr:`ready` attribute must be set to ``True`` when all the extendable classes
-    are loaded.
+    The :attr:`ready` attribute must be set to ``True`` when all the
+    extendable classes are loaded.
     """
 
-    listeners: List[ExtendableRegistryListener] = []
+    listeners: list[ExtendableRegistryListener] = []
 
     def __init__(self) -> None:
-        self._extendable_classes: Dict[str, main.ExtendableMeta] = {}
-        self._loaded_modules: Set[str] = set()
+        self._extendable_classes: dict[str, main.ExtendableMeta] = {}
+        self._loaded_modules: set[str] = set()
         self.ready: bool = False
-        self._extendable_class_defs: Dict[str, main.ExtendableClassDef] = {}
+        self._extendable_class_defs: dict[str, main.ExtendableClassDef] = {}
 
     def __getitem__(self, key: str) -> main.ExtendableMeta:
         return self._extendable_classes[key]
@@ -55,7 +63,13 @@ class ExtendableClassesRegistry:
     def __contains__(self, key: str) -> bool:
         return key in self._extendable_classes
 
-    def get(self, key: str, default: Any = ...) -> main.ExtendableMeta:
+    @overload
+    def get(self, key: str) -> main.ExtendableMeta: ...
+
+    @overload
+    def get(self, key: str, default: _T) -> main.ExtendableMeta | _T: ...
+
+    def get(self, key: str, default: Any = ...) -> Any:
         return self._extendable_classes.get(key, default)
 
     def __iter__(self) -> Iterator[str]:
@@ -90,10 +104,13 @@ class ExtendableClassesRegistry:
                         f"extendable class '{class_def.name}' inherits from"
                         f"undefined base '{base}'"
                     )
-        to_build = self._extendable_class_defs.items()
+        # all the classes are (re)built: an extension of a class used as base or
+        # mixin by other classes can be loaded by a new initialization
+        to_build = list(self._extendable_class_defs.items())
         while to_build:
             remaining = []
-            for name, class_def in self._extendable_class_defs.items():
+            # only the classes waiting for their bases are built by the next pass
+            for name, class_def in to_build:
                 if not class_def.is_mixed_bases:
                     self.build_extendable_class(class_def)
                     continue
@@ -109,7 +126,7 @@ class ExtendableClassesRegistry:
                     self.build_extendable_class(class_def)
                     continue
                 remaining.append((name, class_def))
-            to_build = remaining  # type: ignore
+            to_build = remaining
 
     def build_extendable_class(
         self, class_def: main.ExtendableClassDef
@@ -139,13 +156,20 @@ class ExtendableClassesRegistry:
             for other_base in class_def.others_bases:
                 bases.add(other_base)
             simple_name = name.split(".")[-1]
-            uniq_class_name = f"{simple_name}{idx}"
             namespace = cls_def.namespace
             namespace.update(
                 {
-                    "__qualname__": uniq_class_name,
+                    # all the classes of the hierarchy keep the qualified name
+                    # of the original class since they are the same class
+                    # for the end user (e.g. in error messages or schemas)
+                    "__qualname__": class_def.original_cls.__qualname__,
                     "_is_aggregated_class": True,
                     "_original_cls": cls_def.original_cls,
+                    # same information as dunder attributes, since names
+                    # starting with an underscore can be altered by third
+                    # party metaclasses (e.g. pydantic private attributes)
+                    "__xreg_level__": idx,
+                    "__xreg_original_cls__": cls_def.original_cls,
                 }
             )
             extendableClass = types.new_class(
@@ -172,7 +196,7 @@ class ExtendableClassesRegistry:
         finally:
             main._registry_build_mode = False
 
-    def init_registry(self, module_matchings: Optional[List[str]] = None) -> None:
+    def init_registry(self, module_matchings: list[str] | None = None) -> None:
         """Build the extendable classes by aggregating the classes declared in the given
         module matching list in the same order as the list one. IOW, the mro into the
         aggregated classes will be the inverse one of the given module list. If no
@@ -212,12 +236,8 @@ class ModuleIndex:
         into the same order as the initial loading order
         """
         self._conn.execute(
-            """
-            CREATE TABLE modules (
-                name TEXT not null PRIMARY KEY,
-                idx INTEGER not null
-            )
-        """
+            "CREATE TABLE modules "
+            "(name TEXT not null PRIMARY KEY, idx INTEGER not null)"
         )
         records = (
             (m, idx)
@@ -225,7 +245,7 @@ class ModuleIndex:
         )
         self._conn.executemany("INSERT INTO modules VALUES (?, ?)", records)
 
-    def get_modules(self, module_matching: str) -> List[str]:
+    def get_modules(self, module_matching: str) -> list[str]:
         query = "SELECT name from modules where name like ? order by idx ASC"
         result = self._conn.execute(query, [module_matching.replace("*", "%")])
         return [r[0] for r in result.fetchall()]
