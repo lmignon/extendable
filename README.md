@@ -181,9 +181,11 @@ changelog is built from the news fragments (towncrier).
   `feature`, `bugfix`, `doc`, `removal` or `misc`.
 * To release a new version, run the `release` workflow from the GitHub "Actions"
   tab and choose the part of the version to increase (`patch`, `minor` or
-  `major`). Once the run is approved (required reviewers of the
-  `release-approval` environment), the workflow updates `HISTORY.rst`, tags the
-  release, publishes the package to PyPI and creates the GitHub release.
+  `major`). The workflow prepares the release (`HISTORY.rst`, tag, package) and
+  shows the release notes into the summary of the run. Once the release is
+  approved (required reviewers of the `release` environment), the workflow
+  pushes the changelog and the tag, publishes the package to PyPI and creates
+  the GitHub release. Nothing is pushed nor published before the approval.
 
 ## Contributing
 
